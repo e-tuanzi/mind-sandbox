@@ -1,8 +1,11 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, TYPE_CHECKING
 from app.models.map import LocationInfo
 from app.models.agent import AgentStats
 from app.models.entity import Entity
+
+if TYPE_CHECKING:
+    from app.services.time_system import TimeSystem
 
 class EnvironmentSnapshot(BaseModel):
     """Agent 感知到的环境快照"""
@@ -14,6 +17,17 @@ class EnvironmentSnapshot(BaseModel):
     weather: str = "Sunny"
 
 class PerceptionFilter:
+    def __init__(self, time_system=None):
+        self.snapshot_cls = EnvironmentSnapshot
+        self._time_system = time_system
+
+    def _get_time_desc(self) -> str:
+        """获取时间描述字符串"""
+        if self._time_system:
+            t = self._time_system.get_current_time()
+            return f"{t.hour:02d}:{t.minute:02d}"
+        return "Unknown Time"
+
     def process(self, snapshot: EnvironmentSnapshot) -> str:
         """将环境快照转化为自然语言描述"""
         # 1. Time & Weather
