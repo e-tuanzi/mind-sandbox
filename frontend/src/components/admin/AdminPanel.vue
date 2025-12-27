@@ -132,7 +132,8 @@ async function tickWorld() {
   try {
     const result = await worldStore.tickWorld()
     await agentStore.fetchAllAgents()
-    addLog('success', `时间推进到 ${result.time}`)
+    const timeStr = result.current_time || result.time
+    addLog('success', `时间推进到 ${timeStr}`)
   } catch (error) {
     addLog('error', '时间推进失败')
     console.error(error)

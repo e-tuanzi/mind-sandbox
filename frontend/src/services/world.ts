@@ -8,7 +8,7 @@ export const worldService = {
   },
 
   async tick(): Promise<{ message: string; time: string }> {
-    const response = await api.post('/world/tick')
+    const response = await api.post('/admin/world/tick', { ticks: 1 })
     return response.data
   }
 }

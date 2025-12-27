@@ -23,7 +23,9 @@ export const useWorldStore = defineStore('world', () => {
     error.value = null
     try {
       const status = await worldService.getStatus()
-      const [hour, minute] = status.time.split(':').map(Number)
+      const parts = status.time.split(' ')
+      const timePart = parts[parts.length - 1]
+      const [hour, minute] = timePart.split(':').map(Number)
       time.value = { hour, minute }
       weather.value = status.weather
       activeAgentsCount.value = status.active_agents
@@ -38,8 +40,13 @@ export const useWorldStore = defineStore('world', () => {
   async function tickWorld() {
     try {
       const result = await worldService.tick()
-      const [hour, minute] = result.time.split(':').map(Number)
-      time.value = { hour, minute }
+      const timeStr = result.current_time || result.time
+      if (timeStr) {
+        const parts = timeStr.split(' ')
+        const timePart = parts[parts.length - 1]
+        const [hour, minute] = timePart.split(':').map(Number)
+        time.value = { hour, minute }
+      }
       return result
     } catch (e) {
       error.value = 'Failed to tick world'
