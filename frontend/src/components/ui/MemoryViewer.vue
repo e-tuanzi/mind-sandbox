@@ -2,7 +2,7 @@
   <div v-if="isOpen" class="memory-viewer-overlay">
     <div class="memory-viewer">
       <div class="panel-header">
-        <h3>记忆查看器 - {{ agent?.id }}</h3>
+        <h3>{{ t.agent.memory }} / Memory Viewer - {{ agent?.id }}</h3>
         <button @click="close" class="close-btn">&times;</button>
       </div>
 
@@ -11,18 +11,18 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="搜索记忆..."
+            :placeholder="searchPlaceholder"
             class="search-input"
           />
-          <button @click="searchMemories" class="btn btn-primary">搜索</button>
+          <button @click="searchMemories" class="btn btn-primary">{{ t.common.search }}</button>
         </div>
 
         <div v-if="isLoading" class="loading">
-          加载中...
+          {{ t.common.loading }}
         </div>
 
         <div v-else-if="history" class="history-section">
-          <h4>历史记录</h4>
+          <h4>{{ t.agent.activity }}</h4>
           <div class="memory-list">
             <div v-for="(item, index) in displayedHistory" :key="index" class="memory-item">
               <p class="memory-content">{{ item.content }}</p>
@@ -31,7 +31,7 @@
         </div>
 
         <div v-else class="empty-state">
-          暂无记忆记录
+          {{ t.agent.noDescription }}
         </div>
       </div>
     </div>
@@ -42,13 +42,19 @@
 import { ref, computed, watch } from 'vue'
 import { useAgentStore } from '../../stores/agent'
 import { useUIStore } from '../../stores/ui'
+import { useLocaleStore } from '../../stores/locale'
+import { getTranslation } from '../../locales'
 import type { AgentHistory } from '../../types'
 
 const agentStore = useAgentStore()
 const uiStore = useUIStore()
+const localeStore = useLocaleStore()
 
 const isOpen = computed(() => uiStore.showMemoryViewer)
 const agent = computed(() => agentStore.selectedAgent)
+
+const t = computed(() => getTranslation(localeStore.currentLanguage))
+const searchPlaceholder = computed(() => localeStore.currentLanguage === 'zh' ? '搜索记忆...' : 'Search memories...')
 
 const searchQuery = ref('')
 const isLoading = ref(false)

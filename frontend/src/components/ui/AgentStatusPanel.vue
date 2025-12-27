@@ -7,19 +7,19 @@
 
     <div class="panel-content">
       <div class="info-row">
-        <span class="label">位置:</span>
+        <span class="label">{{ t.agent.position }}:</span>
         <span class="value">({{ agent.x }}, {{ agent.y }})</span>
       </div>
 
       <div class="info-row">
-        <span class="label">状态:</span>
+        <span class="label">{{ t.agent.state }}:</span>
         <span class="value status-badge" :class="agent.current_action.toLowerCase()">
           {{ agent.current_action }}
         </span>
       </div>
 
       <div class="stats-section">
-        <h4>属性数值</h4>
+        <h4>{{ t.agent.health }}</h4>
         <div class="stat-bar">
           <div class="stat-label">
             <span>Health</span>
@@ -62,13 +62,13 @@
       </div>
 
       <div class="values-section">
-        <h4>价值观</h4>
-        <p class="values-text">{{ agent.values || '尚未形成明确价值观' }}</p>
+        <h4>{{ t.agent.memory }}</h4>
+        <p class="values-text">{{ agent.values || t.agent.noDescription }}</p>
       </div>
 
       <div class="actions-section">
-        <button @click="showMemory" class="btn btn-secondary">查看记忆</button>
-        <button @click="refreshAgent" class="btn btn-primary">刷新状态</button>
+        <button @click="showMemory" class="btn btn-secondary">{{ t.agent.memory }}</button>
+        <button @click="refreshAgent" class="btn btn-primary">{{ t.common.refresh }}</button>
       </div>
     </div>
   </div>
@@ -78,10 +78,14 @@
 import { computed } from 'vue'
 import { useAgentStore } from '../../stores/agent'
 import { useUIStore } from '../../stores/ui'
+import { useLocaleStore } from '../../stores/locale'
+import { getTranslation } from '../../locales'
 
 const agentStore = useAgentStore()
 const uiStore = useUIStore()
+const localeStore = useLocaleStore()
 
+const t = computed(() => getTranslation(localeStore.currentLanguage))
 const agent = computed(() => agentStore.selectedAgent)
 
 function close() {

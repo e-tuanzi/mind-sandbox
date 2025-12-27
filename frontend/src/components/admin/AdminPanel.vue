@@ -1,28 +1,28 @@
 <template>
   <div v-if="isOpen" class="admin-panel">
     <div class="panel-header">
-      <h3>上帝视角控制台</h3>
+      <h3>{{ t.admin.title }}</h3>
       <button @click="close" class="close-btn">&times;</button>
     </div>
 
     <div class="panel-content">
       <div class="world-status">
-        <h4>世界状态</h4>
+        <h4>{{ t.world.status }}</h4>
         <div class="status-grid">
           <div class="status-item">
-            <span class="label">时间:</span>
+            <span class="label">{{ t.world.time }}:</span>
             <span class="value">{{ worldStore.formattedTime }}</span>
           </div>
           <div class="status-item">
-            <span class="label">天气:</span>
-            <span class="value">{{ worldStore.weather }}</span>
+            <span class="label">{{ t.world.weather }}:</span>
+            <span class="value">{{ worldStore.weatherTranslation }}</span>
           </div>
           <div class="status-item">
-            <span class="label">活跃 Agent:</span>
+            <span class="label">{{ t.world.agents }}:</span>
             <span class="value">{{ worldStore.activeAgentsCount }}</span>
           </div>
           <div class="status-item">
-            <span class="label">状态:</span>
+            <span class="label">{{ t.world.status }}:</span>
             <span class="value" :class="{ night: worldStore.isNight }">
               {{ worldStore.isNight ? '夜晚' : '白天' }}
             </span>
@@ -31,63 +31,63 @@
       </div>
 
       <div class="time-control">
-        <h4>时间控制</h4>
+        <h4>{{ t.admin.worldControl }}</h4>
         <div class="control-buttons">
           <button @click="tickWorld" :disabled="isTicking" class="btn btn-primary">
-            {{ isTicking ? '推进中...' : '推进 1 小时' }}
+            {{ isTicking ? t.admin.advancing : t.admin.advanceHour }}
           </button>
           <button @click="toggleAutoTick" class="btn" :class="autoTick ? 'btn-danger' : 'btn-secondary'">
-            {{ autoTick ? '停止自动推进' : '开启自动推进' }}
+            {{ autoTick ? t.admin.autoTickStop : t.admin.autoTickStart }}
           </button>
         </div>
       </div>
 
       <div class="event-injection">
-        <h4>事件注入</h4>
+        <h4>{{ t.admin.eventInjection }}</h4>
         <div class="event-form">
           <select v-model="selectedEventType" class="event-select">
-            <option value="GlobalCrisis">全球危机</option>
-            <option value="WeatherChange">天气变化</option>
-            <option value="EconomicEvent">经济事件</option>
+            <option value="GlobalCrisis">全球危机 / Global Crisis</option>
+            <option value="WeatherChange">天气变化 / Weather Change</option>
+            <option value="EconomicEvent">经济事件 / Economic Event</option>
           </select>
           <textarea
             v-model="eventDescription"
-            placeholder="输入事件描述..."
+            :placeholder="t.admin.eventPlaceholder"
             class="event-textarea"
           ></textarea>
           <button @click="injectEvent" :disabled="isInjecting" class="btn btn-primary">
-            {{ isInjecting ? '注入中...' : '注入事件' }}
+            {{ isInjecting ? t.admin.injecting : t.admin.injectEvent }}
           </button>
         </div>
       </div>
 
       <div class="agent-list">
         <div class="section-header">
-          <h4>Agent 列表</h4>
+          <h4>{{ t.admin.agentList }}</h4>
           <button @click="showCreateAgent = !showCreateAgent" class="btn-small">
-            {{ showCreateAgent ? '关闭' : '新建' }}
+            {{ showCreateAgent ? t.admin.close : t.admin.newAgent }}
           </button>
         </div>
         <div v-if="showCreateAgent" class="create-agent-form">
           <input
             v-model="newAgentId"
-            placeholder="Agent ID"
+            :placeholder="t.admin.agentId"
             class="input-field"
           />
           <input
             v-model.number="newAgentX"
             type="number"
-            placeholder="X 坐标"
+            :placeholder="t.admin.xCoordinate"
             class="input-field"
           />
           <input
             v-model.number="newAgentY"
             type="number"
-            placeholder="Y 坐标"
+            :placeholder="t.admin.yCoordinate"
             class="input-field"
           />
           <button @click="createAgent" :disabled="isCreating" class="btn btn-primary btn-small">
-            {{ isCreating ? '创建中...' : '创建' }}
+            {{ isCreating ? t.common.loading : t.common.create }}
           </button>
         </div>
         <div class="agent-scroll">
@@ -106,7 +106,7 @@
       </div>
 
       <div class="log-console">
-        <h4>日志控制台</h4>
+        <h4>{{ t.admin.logs }}</h4>
         <div class="log-scroll" ref="logContainer">
           <div v-for="(log, index) in logs" :key="index" class="log-entry" :class="log.type">
             <span class="log-time">{{ log.time }}</span>
@@ -123,12 +123,17 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useWorldStore } from '../../stores/world'
 import { useAgentStore } from '../../stores/agent'
 import { useUIStore } from '../../stores/ui'
+import { useLocaleStore } from '../../stores/locale'
+import { getTranslation } from '../../locales'
 import { adminService } from '../../services/admin'
 import type { LogEntry } from '../../types'
 
 const worldStore = useWorldStore()
 const agentStore = useAgentStore()
 const uiStore = useUIStore()
+const localeStore = useLocaleStore()
+
+const t = computed(() => getTranslation(localeStore.currentLanguage))
 
 const isOpen = computed(() => uiStore.showAdminPanel)
 const isTicking = ref(false)
@@ -151,7 +156,7 @@ const logContainer = ref<HTMLElement | null>(null)
 onMounted(async () => {
   await worldStore.fetchWorldStatus()
   await agentStore.fetchAllAgents()
-  addLog('info', '上帝视角控制台已启动')
+  addLog('info', t.value.logs.adminStarted)
 })
 
 onUnmounted(() => {
@@ -167,9 +172,9 @@ async function tickWorld() {
     const result = await worldStore.tickWorld(60)
     await agentStore.fetchAllAgents()
     const timeStr = result.current_time || result.time
-    addLog('success', `时间推进到 ${timeStr}`)
+    addLog('success', t.value.logs.timeAdvanced.replace('{time}', timeStr))
   } catch (error) {
-    addLog('error', '时间推进失败')
+    addLog('error', t.value.logs.timeAdvanceFailed)
     console.error(error)
   } finally {
     isTicking.value = false
@@ -183,10 +188,10 @@ function toggleAutoTick() {
       autoTickInterval.value = null
     }
     autoTick.value = false
-    addLog('info', '自动推进已停止')
+    addLog('info', t.value.logs.autoTickStopped)
   } else {
     autoTick.value = true
-    addLog('info', '自动推进已开启 (每秒推进 1 次)')
+    addLog('info', t.value.logs.autoTickStarted)
     autoTickInterval.value = window.setInterval(() => {
       tickWorld()
     }, 1000)
@@ -195,7 +200,7 @@ function toggleAutoTick() {
 
 async function injectEvent() {
   if (!eventDescription.value.trim()) {
-    addLog('warning', '请输入事件描述')
+    addLog('warning', t.value.logs.enterEventDescription)
     return
   }
 
@@ -205,10 +210,10 @@ async function injectEvent() {
       type: selectedEventType.value,
       description: eventDescription.value
     })
-    addLog('success', `事件已注入: ${selectedEventType.value}`)
+    addLog('success', t.value.logs.eventInjected.replace('{eventType}', selectedEventType.value))
     eventDescription.value = ''
   } catch (error) {
-    addLog('error', '事件注入失败')
+    addLog('error', t.value.logs.eventInjectFailed)
     console.error(error)
   } finally {
     isInjecting.value = false
@@ -217,12 +222,12 @@ async function injectEvent() {
 
 function selectAgent(id: string) {
   agentStore.selectAgent(id)
-  addLog('info', `已选择 Agent: ${id}`)
+  addLog('info', t.value.logs.agentSelected.replace('{agentId}', id))
 }
 
 async function createAgent() {
   if (!newAgentId.value.trim()) {
-    addLog('warning', '请输入 Agent ID')
+    addLog('warning', t.value.logs.enterAgentId)
     return
   }
 
@@ -230,11 +235,11 @@ async function createAgent() {
   try {
     await adminService.createAgent(newAgentId.value, newAgentX.value, newAgentY.value)
     await agentStore.fetchAllAgents()
-    addLog('success', `Agent ${newAgentId.value} 创建成功`)
+    addLog('success', t.value.logs.agentCreated.replace('{agentId}', newAgentId.value))
     newAgentId.value = ''
     showCreateAgent.value = false
   } catch (error) {
-    addLog('error', 'Agent 创建失败')
+    addLog('error', t.value.logs.agentCreateFailed)
     console.error(error)
   } finally {
     isCreating.value = false

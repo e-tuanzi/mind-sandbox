@@ -1,14 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { worldService } from '../services/world'
+import { useLocaleStore } from './locale'
 import type { WorldStatus, GameTime } from '../types'
 
 export const useWorldStore = defineStore('world', () => {
   const time = ref<GameTime>({ hour: 8, minute: 0 })
   const weather = ref('Sunny')
+  const weatherTranslation = ref('晴天')
   const activeAgentsCount = ref(0)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const localeStore = useLocaleStore()
 
   const formattedTime = computed(() => {
     return `${time.value.hour.toString().padStart(2, '0')}:${time.value.minute.toString().padStart(2, '0')}`
@@ -22,12 +25,13 @@ export const useWorldStore = defineStore('world', () => {
     isLoading.value = true
     error.value = null
     try {
-      const status = await worldService.getStatus()
+      const status = await worldService.getStatus(localeStore.currentLanguage)
       const parts = status.time.split(' ')
       const timePart = parts[parts.length - 1]
       const [hour, minute] = timePart.split(':').map(Number)
       time.value = { hour, minute }
       weather.value = status.weather
+      weatherTranslation.value = status.weather_translation || status.weather
       activeAgentsCount.value = status.active_agents
     } catch (e) {
       error.value = 'Failed to fetch world status'
@@ -47,6 +51,8 @@ export const useWorldStore = defineStore('world', () => {
         const [hour, minute] = timePart.split(':').map(Number)
         time.value = { hour, minute }
       }
+      // 更新天气翻译
+      await fetchWorldStatus()
       return result
     } catch (e) {
       error.value = 'Failed to tick world'
@@ -62,6 +68,7 @@ export const useWorldStore = defineStore('world', () => {
   return {
     time,
     weather,
+    weatherTranslation,
     activeAgentsCount,
     isLoading,
     error,

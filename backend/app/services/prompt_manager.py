@@ -18,16 +18,18 @@ class PromptManager:
         if self.language not in ["en", "zh"]:
             self.language = "en" # 默认回退到英文
 
-    def get_decision_prompt(self, perception_text: str, memory_context: str, stats: Dict[str, Any]) -> Dict[str, str]:
+    def get_decision_prompt(self, perception_text: str, memory_context: str, stats: Dict[str, Any], language: str = None) -> Dict[str, str]:
         """
         获取并格式化决策提示词。
         
         :param perception_text: 感知文本
         :param memory_context: 记忆上下文
         :param stats: 状态数据
+        :param language: 语言代码（"en" 或 "zh"），为 None 时使用初始化时的语言
         :return: 包含 system 和 user 提示词的字典
         """
-        templates = DECISION_PROMPTS.get(self.language, DECISION_PROMPTS["en"])
+        current_language = language or self.language
+        templates = DECISION_PROMPTS.get(current_language, DECISION_PROMPTS["en"])
         
         user_prompt = templates["user"].format(
             perception_text=perception_text,
@@ -40,14 +42,16 @@ class PromptManager:
             "user": user_prompt
         }
 
-    def get_reflection_prompt(self, daily_log: str) -> Dict[str, str]:
+    def get_reflection_prompt(self, daily_log: str, language: str = None) -> Dict[str, str]:
         """
         获取并格式化反思提示词。
         
         :param daily_log: 当日日志
+        :param language: 语言代码（"en" 或 "zh"），为 None 时使用初始化时的语言
         :return: 包含 system 和 user 提示词的字典
         """
-        templates = REFLECTION_PROMPTS.get(self.language, REFLECTION_PROMPTS["en"])
+        current_language = language or self.language
+        templates = REFLECTION_PROMPTS.get(current_language, REFLECTION_PROMPTS["en"])
         
         user_prompt = templates["user"].format(daily_log=daily_log)
         

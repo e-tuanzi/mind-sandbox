@@ -2,8 +2,8 @@
   <div class="app">
     <header class="header">
       <div class="header-left">
-        <h1 class="title">Digital Soul</h1>
-        <span class="subtitle">数字生命模拟系统</span>
+        <h1 class="title">{{ t.world.title }}</h1>
+        <span class="subtitle">数字生命模拟系统 / Digital Life Simulation</span>
       </div>
       <div class="header-right">
         <div class="world-info">
@@ -13,14 +13,17 @@
           </span>
           <span class="info-item">
             <span class="icon">{{ weatherIcon }}</span>
-            <span>{{ worldStore.weather }}</span>
+            <span>{{ weatherTranslation }}</span>
           </span>
           <span class="info-item">
             <span class="icon">👥</span>
             <span>{{ agentStore.agentList.length }}</span>
           </span>
         </div>
-        <button @click="toggleAdminPanel" class="btn-admin">🎮 上帝视角</button>
+        <button @click="toggleLanguage" class="btn-language" :title="t.common.close">
+          {{ localeStore.currentLanguage === 'zh' ? 'EN' : '中文' }}
+        </button>
+        <button @click="toggleAdminPanel" class="btn-admin">🎮 {{ t.admin.title }}</button>
       </div>
     </header>
 
@@ -32,9 +35,9 @@
     </main>
 
     <footer class="footer">
-      <span>Phase 4 - 前端可视化</span>
+      <span>Phase 4 - 前端可视化 / Frontend Visualization</span>
       <span>|</span>
-      <span>点击 Agent 查看详情</span>
+      <span>点击 Agent 查看详情 / Click Agent for Details</span>
     </footer>
   </div>
 </template>
@@ -44,6 +47,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useWorldStore } from './stores/world'
 import { useAgentStore } from './stores/agent'
 import { useUIStore } from './stores/ui'
+import { useLocaleStore } from './stores/locale'
+import { getTranslation, getWeatherTranslation } from './locales'
 import GameContainer from './components/game/GameContainer.vue'
 import AgentStatusPanel from './components/ui/AgentStatusPanel.vue'
 import MemoryViewer from './components/ui/MemoryViewer.vue'
@@ -52,8 +57,12 @@ import AdminPanel from './components/admin/AdminPanel.vue'
 const worldStore = useWorldStore()
 const agentStore = useAgentStore()
 const uiStore = useUIStore()
+const localeStore = useLocaleStore()
 
 const gameContainerRef = ref()
+
+const t = computed(() => getTranslation(localeStore.currentLanguage))
+const weatherTranslation = computed(() => getWeatherTranslation(worldStore.weather, localeStore.currentLanguage))
 
 const weatherIcon = computed(() => {
   const weather = worldStore.weather.toLowerCase()
@@ -66,6 +75,10 @@ const weatherIcon = computed(() => {
 
 function toggleAdminPanel() {
   uiStore.toggleAdminPanel()
+}
+
+function toggleLanguage() {
+  localeStore.toggleLanguage()
 }
 
 onMounted(async () => {
@@ -169,6 +182,27 @@ body {
 
 .btn-admin:active {
   transform: translateY(0);
+}
+
+.btn-language {
+  padding: 8px 12px;
+  background: rgba(74, 74, 106, 0.8);
+  border: 1px solid #6a6a8a;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-language:hover {
+  background: rgba(90, 90, 118, 0.9);
+  border-color: #8a8aaa;
+}
+
+.btn-language:active {
+  transform: scale(0.95);
 }
 
 .main {

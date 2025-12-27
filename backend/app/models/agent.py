@@ -39,9 +39,13 @@ class Agent(Entity):
         self._perception = perception
         self._map_system = map_system
 
-    def decide_and_act(self) -> Optional[ActionType]:
+    def decide_and_act(self, language: str = None) -> Optional[ActionType]:
         """
         完整决策循环：感知 -> 检索 -> 思考 -> 行动 -> 记录
+        
+        Args:
+            language: 语言代码（"en" 或 "zh"）
+        
         Returns: 执行的动作类型
         """
         if not self.is_active or self.is_sleeping:
@@ -77,7 +81,7 @@ class Agent(Entity):
             "energy": self.stats.energy
         }
         
-        decision = self._brain.decide_next_action(perception_text, memory_context, stats_dict)
+        decision = self._brain.decide_next_action(perception_text, memory_context, stats_dict, language)
         
         # 5. 行动 - 执行决策
         self.current_action = decision.action

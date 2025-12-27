@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { agentService } from '../services/agent'
+import { useLocaleStore } from './locale'
 import type { Agent, Thought, AgentHistory } from '../types'
 
 export const useAgentStore = defineStore('agent', () => {
@@ -8,6 +9,7 @@ export const useAgentStore = defineStore('agent', () => {
   const selectedAgentId = ref<string | null>(null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const localeStore = useLocaleStore()
 
   const selectedAgent = computed(() => {
     return selectedAgentId.value ? agents.value.get(selectedAgentId.value) : null
@@ -21,7 +23,7 @@ export const useAgentStore = defineStore('agent', () => {
     isLoading.value = true
     error.value = null
     try {
-      const data = await agentService.getAllAgents()
+      const data = await agentService.getAllAgents(localeStore.currentLanguage)
       agents.value.clear()
       data.forEach(agent => {
         agents.value.set(agent.id, agent)
@@ -38,7 +40,7 @@ export const useAgentStore = defineStore('agent', () => {
     isLoading.value = true
     error.value = null
     try {
-      const agent = await agentService.getAgent(id)
+      const agent = await agentService.getAgent(id, localeStore.currentLanguage)
       agents.value.set(id, agent)
       return agent
     } catch (e) {
@@ -52,7 +54,7 @@ export const useAgentStore = defineStore('agent', () => {
 
   async function fetchAgentThought(id: string): Promise<Thought> {
     try {
-      return await agentService.getAgentThought(id)
+      return await agentService.getAgentThought(id, localeStore.currentLanguage)
     } catch (e) {
       console.error('Failed to fetch agent thought:', e)
       throw e
@@ -61,7 +63,7 @@ export const useAgentStore = defineStore('agent', () => {
 
   async function fetchAgentHistory(id: string): Promise<AgentHistory> {
     try {
-      return await agentService.getAgentHistory(id)
+      return await agentService.getAgentHistory(id, localeStore.currentLanguage)
     } catch (e) {
       console.error('Failed to fetch agent history:', e)
       throw e
