@@ -62,7 +62,34 @@
       </div>
 
       <div class="agent-list">
-        <h4>Agent 列表</h4>
+        <div class="section-header">
+          <h4>Agent 列表</h4>
+          <button @click="showCreateAgent = !showCreateAgent" class="btn-small">
+            {{ showCreateAgent ? '关闭' : '新建' }}
+          </button>
+        </div>
+        <div v-if="showCreateAgent" class="create-agent-form">
+          <input
+            v-model="newAgentId"
+            placeholder="Agent ID"
+            class="input-field"
+          />
+          <input
+            v-model.number="newAgentX"
+            type="number"
+            placeholder="X 坐标"
+            class="input-field"
+          />
+          <input
+            v-model.number="newAgentY"
+            type="number"
+            placeholder="Y 坐标"
+            class="input-field"
+          />
+          <button @click="createAgent" :disabled="isCreating" class="btn btn-primary btn-small">
+            {{ isCreating ? '创建中...' : '创建' }}
+          </button>
+        </div>
         <div class="agent-scroll">
           <div
             v-for="agent in agentStore.agentList"
@@ -112,6 +139,12 @@ const autoTickInterval = ref<number | null>(null)
 const selectedEventType = ref('GlobalCrisis')
 const eventDescription = ref('')
 
+const showCreateAgent = ref(false)
+const newAgentId = ref('')
+const newAgentX = ref(10)
+const newAgentY = ref(10)
+const isCreating = ref(false)
+
 const logs = ref<LogEntry[]>([])
 const logContainer = ref<HTMLElement | null>(null)
 
@@ -130,7 +163,8 @@ onUnmounted(() => {
 async function tickWorld() {
   isTicking.value = true
   try {
-    const result = await worldStore.tickWorld()
+    // 推进 1 小时（每个 tick = 1 分钟，所以需要 60 个 ticks）
+    const result = await worldStore.tickWorld(60)
     await agentStore.fetchAllAgents()
     const timeStr = result.current_time || result.time
     addLog('success', `时间推进到 ${timeStr}`)
@@ -184,6 +218,27 @@ async function injectEvent() {
 function selectAgent(id: string) {
   agentStore.selectAgent(id)
   addLog('info', `已选择 Agent: ${id}`)
+}
+
+async function createAgent() {
+  if (!newAgentId.value.trim()) {
+    addLog('warning', '请输入 Agent ID')
+    return
+  }
+
+  isCreating.value = true
+  try {
+    await adminService.createAgent(newAgentId.value, newAgentX.value, newAgentY.value)
+    await agentStore.fetchAllAgents()
+    addLog('success', `Agent ${newAgentId.value} 创建成功`)
+    newAgentId.value = ''
+    showCreateAgent.value = false
+  } catch (error) {
+    addLog('error', 'Agent 创建失败')
+    console.error(error)
+  } finally {
+    isCreating.value = false
+  }
 }
 
 function addLog(type: 'info' | 'success' | 'warning' | 'error', message: string) {
@@ -465,5 +520,62 @@ function close() {
 
 .log-entry.error .log-message {
   color: #ff6666;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #aaa;
+  border-bottom: 1px solid #4a4a6a;
+  padding-bottom: 4px;
+  flex: 1;
+}
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #3a3a5a;
+  color: #ccc;
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-small:hover {
+  background: #4a4a6a;
+  color: #fff;
+}
+
+.create-agent-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: rgba(42, 42, 58, 0.5);
+  border-radius: 4px;
+}
+
+.input-field {
+  flex: 1;
+  min-width: 80px;
+  padding: 6px 8px;
+  background: #2a2a3a;
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #6a6a8a;
 }
 </style>

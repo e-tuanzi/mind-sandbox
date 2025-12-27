@@ -13,6 +13,32 @@ class WorldEngine:
         self.map_system = MapSystem()
         self.state_dynamics = StateDynamics(self.map_system)
         self.perception_filter = PerceptionFilter(self.time_system)
+        
+        # 初始化默认 Agent
+        self._initialize_default_agents()
+    
+    def _initialize_default_agents(self):
+        """初始化默认的 Agent"""
+        default_agents = [
+            {"id": "agent_001", "x": 3, "y": 3, "name": "小明"},
+            {"id": "agent_002", "x": 7, "y": 3, "name": "小红"},
+            {"id": "agent_003", "x": 12, "y": 3, "name": "小强"},
+        ]
+        
+        for agent_config in default_agents:
+            agent = self.create_agent(
+                agent_id=agent_config["id"],
+                x=agent_config["x"],
+                y=agent_config["y"],
+                use_mock_brain=True
+            )
+            # 设置初始价值观
+            if agent_config["name"] == "小明":
+                agent.values = "我想要努力工作赚钱，改善生活。"
+            elif agent_config["name"] == "小红":
+                agent.values = "健康和快乐比金钱更重要。"
+            elif agent_config["name"] == "小强":
+                agent.values = "我会平衡工作和生活，追求内心平静。"
 
     def create_agent(self, agent_id: str, x: int, y: int, use_mock_brain: bool = True) -> Agent:
         """创建并初始化一个完整的 Agent"""

@@ -37,9 +37,9 @@ export const useWorldStore = defineStore('world', () => {
     }
   }
 
-  async function tickWorld() {
+  async function tickWorld(ticks: number = 1) {
     try {
-      const result = await worldService.tick()
+      const result = await worldService.tick(ticks)
       const timeStr = result.current_time || result.time
       if (timeStr) {
         const parts = timeStr.split(' ')
